@@ -55,6 +55,51 @@ class Product:
         return total_price
 
 
+class NonStockedProduct(Product):
+    """Ein nicht physisches Produkt ohne Lagerbestand."""
+
+    def __init__(self, name, price):
+        """Legt das Produkt mit Menge 0 an."""
+        super().__init__(name, price, quantity=0)
+
+    def set_quantity(self, quantity):
+        """Hält die Menge immer auf 0."""
+        self.quantity = 0
+
+    def buy(self, quantity):
+        """Kauft die Menge ohne Lagerprüfung und gibt den Gesamtpreis zurück."""
+        if not self.active:
+            raise ValueError("Das Produkt ist nicht aktiv.")
+        if quantity <= 0:
+            raise ValueError("Die Kaufmenge muss größer als 0 sein.")
+        return float(self.price * quantity)
+
+    def show(self):
+        """Gibt das Produkt mit dem Hinweis auf fehlenden Bestand aus."""
+        print(f"{self.name}, Price: {self.price}, Quantity: Unlimited (non-stocked)")
+
+
+class LimitedProduct(Product):
+    """Ein Produkt, das pro Bestellung nur begrenzt oft gekauft werden darf."""
+
+    def __init__(self, name, price, quantity, maximum):
+        """Legt das Produkt mit einer Höchstmenge pro Bestellung an."""
+        super().__init__(name, price, quantity)
+        if maximum < 1:
+            raise ValueError("Die Höchstmenge muss mindestens 1 sein.")
+        self.maximum = maximum
+
+    def buy(self, quantity):
+        """Lehnt Mengen über der Höchstmenge ab, sonst normaler Kauf."""
+        if quantity > self.maximum:
+            raise ValueError(f"Maximal {self.maximum} pro Bestellung erlaubt.")
+        return super().buy(quantity)
+
+    def show(self):
+        """Gibt das Produkt mit der Höchstmenge aus."""
+        print(f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Limited to {self.maximum} per order")
+
+
 def main():
     """Testet die Klasse Product."""
     bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)

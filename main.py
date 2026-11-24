@@ -41,7 +41,6 @@ def make_order(store_obj):
         return
     list_products(store_obj)
     print("When you want to finish the order, enter an empty text.")
-    shopping_list = []
     requested = {}
     while True:
         number_text = input("Which product # do you want? ").strip()
@@ -56,12 +55,16 @@ def make_order(store_obj):
             print("Invalid amount.")
             continue
         product = active_products[number - 1]
-        if requested.get(product, 0) + amount > product.get_quantity():
+        new_total = requested.get(product, 0) + amount
+        if isinstance(product, products.LimitedProduct) and new_total > product.maximum:
+            print(f"Maximum {product.maximum} per order for this product.")
+            continue
+        if not isinstance(product, products.NonStockedProduct) and new_total > product.get_quantity():
             print("Not enough items in stock.")
             continue
-        requested[product] = requested.get(product, 0) + amount
-        shopping_list.append((product, amount))
+        requested[product] = new_total
         print("Product added to list!")
+    shopping_list = list(requested.items())
     if not shopping_list:
         print("Nothing ordered.")
         return
@@ -95,6 +98,8 @@ def main():
         products.Product("MacBook Air M2", price=1450, quantity=100),
         products.Product("Bose QuietComfort Earbuds", price=250, quantity=500),
         products.Product("Google Pixel 7", price=500, quantity=250),
+        products.NonStockedProduct("Windows License", price=125),
+        products.LimitedProduct("Shipping", price=10, quantity=250, maximum=1),
     ]
     best_buy = store.Store(product_list)
     start(best_buy)
